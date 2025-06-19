@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.env
+.env.local
+.env.production
+.git
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+recordings/*
+media/*
+uploads/*
+.replit
+replit.nix
+package-lock.json
