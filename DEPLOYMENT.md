@@ -3,29 +3,48 @@
 ## Prerequisites
 
 ### System Requirements
-- Ubuntu 20.04+ server
+- Ubuntu 20.04+ server (Ubuntu Mint also supported)
 - Docker Engine 20.10+
 - Docker Compose v2
-- Portainer CE
 - Minimum 8GB RAM, 4 CPU cores
 - 100GB+ storage for recordings
+- Virtualization support (VT-x/AMD-V) enabled in BIOS
 
-### Installation Commands
+### Docker Installation Commands
 
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
 
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+# Install prerequisites
+sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release
+
+# Add Docker's GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add Docker repository
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$UBUNTU_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update package index
+sudo apt update
+
+# Install Docker Engine
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Add user to docker group
 sudo usermod -aG docker $USER
 
-# Install Docker Compose
-sudo apt install docker-compose-plugin
+# Log out and back in for group changes to take effect
+```
 
-# Install Portainer
+### Optional: Install Portainer (Web-based Docker Management)
+```bash
+# Create volume for Portainer data
 docker volume create portainer_data
+
+# Run Portainer container
 docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v portainer_data:/data \
@@ -34,51 +53,73 @@ docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always \
 
 ## Deployment Steps
 
-### 1. Prepare Server Directories
+### 1. Clone BROAD Streaming Platform
 ```bash
-sudo mkdir -p /opt/streaming/{recordings,media,uploads}
-sudo chown -R $USER:$USER /opt/streaming
-chmod 755 /opt/streaming/{recordings,media,uploads}
-```
-
-### 2. Build Docker Image
-```bash
-# Clone/copy your application files to the server
-git clone <your-repo> /opt/streaming-app
+# Clone the repository
+git clone https://github.com/flvytas/BROAD.git /opt/streaming-app
 cd /opt/streaming-app
 
+# Create necessary directories
+mkdir -p recordings media uploads
+```
+
+### 2. Configure Environment
+```bash
+# Create .env file with your settings
+cat > .env << EOF
+NODE_ENV=production
+POSTGRES_PASSWORD=your_secure_password_here
+DATABASE_URL=postgresql://streaming_user:your_secure_password_here@postgres:5432/streaming_db
+PGHOST=postgres
+PGPORT=5432
+PGUSER=streaming_user
+PGPASSWORD=your_secure_password_here
+PGDATABASE=streaming_db
+EOF
+
+# Set proper permissions
+chmod 755 recordings media uploads
+```
+
+### 3. Build and Deploy
+```bash
 # Build the Docker image
-docker build -t streaming-platform:latest .
-```
+docker compose build
 
-### 3. Deploy via Portainer
+# Start all services
+docker compose up -d
 
-#### Option A: Using Portainer Web UI
-1. Access Portainer at `https://your-server-ip:9443`
-2. Go to **Stacks** → **Add Stack**
-3. Name: `streaming-platform`
-4. Copy contents of `portainer-stack.yml`
-5. Set environment variables:
-   - `POSTGRES_PASSWORD=your_secure_password`
-6. Deploy the stack
-
-#### Option B: Using Docker Compose
-```bash
-# Set environment variable
-export POSTGRES_PASSWORD=your_secure_password
-
-# Deploy with Docker Compose
-docker-compose up -d
-```
-
-### 4. Initial Database Setup
-```bash
 # Wait for containers to start
 sleep 30
 
-# Run database migration
-docker exec streaming-platform npm run db:push
+# Initialize database (create tables)
+docker compose exec streaming-app npm run db:push
 ```
+
+### 4. Verify Installation
+```bash
+# Check container status
+docker compose ps
+
+# Check application logs
+docker compose logs streaming-app
+
+# Test web interface
+curl http://localhost:5000/api/streams
+
+# Access the application
+echo "Open your browser and navigate to: http://your-server-ip:5000"
+```
+
+### Alternative: Deploy via Portainer Web UI
+If you installed Portainer, you can also deploy using the web interface:
+
+1. Access Portainer at `https://your-server-ip:9443`
+2. Go to **Stacks** → **Add Stack**
+3. Name: `broad-streaming-platform`
+4. Copy contents of `docker-compose.yml` into the stack
+5. Set environment variables in the stack configuration
+6. Deploy the stack
 
 ## Configuration
 
