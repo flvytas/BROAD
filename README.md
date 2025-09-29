@@ -44,19 +44,33 @@ A comprehensive live streaming platform designed for high-quality video broadcas
 
 ### Docker Deployment (Recommended)
 
-1. **Clone the repository**
+1. **Clone the BROAD repository**
    ```bash
-   git clone https://github.com/yourusername/streaming-platform.git
-   cd streaming-platform
+   git clone https://github.com/flvytas/BROAD.git
+   cd BROAD
    ```
 
-2. **Run automated deployment**
+2. **Configure environment**
    ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
+   # Create environment file
+   cat > .env << EOF
+   NODE_ENV=production
+   POSTGRES_PASSWORD=your_secure_password_here
+   DATABASE_URL=postgresql://streaming_user:your_secure_password_here@postgres:5432/streaming_db
+   EOF
    ```
 
-3. **Access the platform**
+3. **Deploy with Docker Compose**
+   ```bash
+   docker compose build
+   docker compose up -d
+   
+   # Initialize database
+   sleep 30
+   docker compose exec streaming-app npm run db:push
+   ```
+
+4. **Access the platform**
    - Web Interface: `http://your-server:5000`
    - RTMP Input: `rtmp://your-server:1935/live/YOUR_STREAM_KEY`
    - HLS Output: `http://your-server:8000/live/YOUR_STREAM_KEY/index.m3u8`
