@@ -1,5 +1,9 @@
 # Docker Deployment Guide for Ubuntu Server
 
+> **🖱️ Prefer GUI Installation?** See **[PORTAINER_DOCKER_DESKTOP_GUIDE.md](./PORTAINER_DOCKER_DESKTOP_GUIDE.md)** for step-by-step instructions using Portainer or Docker Desktop with graphical interfaces (no command line required).
+
+---
+
 ## Prerequisites
 
 ### System Requirements
