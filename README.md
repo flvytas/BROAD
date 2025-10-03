@@ -42,7 +42,9 @@ A comprehensive live streaming platform designed for high-quality video broadcas
 
 ## Quick Start
 
-### Docker Deployment (Recommended)
+> **🖱️ Prefer GUI Installation?** Check out **[PORTAINER_DOCKER_DESKTOP_GUIDE.md](./PORTAINER_DOCKER_DESKTOP_GUIDE.md)** for visual step-by-step instructions using Portainer or Docker Desktop.
+
+### Docker Deployment (Command Line)
 
 1. **Clone the BROAD repository**
    ```bash
