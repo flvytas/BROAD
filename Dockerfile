@@ -13,13 +13,13 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (use npm install instead of npm ci)
+# Install ALL dependencies
 RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (creates dist/index.js and dist/public/)
 RUN npm run build
 
 # Production stage
@@ -40,9 +40,14 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm install --production
 
-# Copy built application from builder
+# Copy built files from builder
+# Backend: dist/index.js
+# Frontend: dist/public/
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/client/dist ./client/dist
+
+# Copy source folders that might be needed at runtime
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/shared ./shared
 
 # Create necessary directories with proper permissions
 RUN mkdir -p recordings media uploads && \
