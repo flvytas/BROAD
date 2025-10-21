@@ -37,7 +37,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (including dev, to include Vite)
+# Install ALL dependencies (not just production)
 RUN npm install
 
 # Copy built application from builder
