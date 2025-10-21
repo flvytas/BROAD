@@ -7,26 +7,32 @@ services:
       dockerfile: Dockerfile
     container_name: streaming-platform
     restart: unless-stopped
-    network_mode: bridge
     ports:
-      - "5000:5000"
-      - "1935:1935"
-      - "8000:8000"
+      - "0.0.0.0:5000:5000"
+      - "0.0.0.0:1935:1935"
+      - "0.0.0.0:8000:8000"
     volumes:
       - ./recordings:/app/recordings
       - ./media:/app/media
       - ./uploads:/app/uploads
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://streaming_user:streaming_pass@postgres:5432/streaming_db
+      - DATABASE_URL=postgresql://streaming_user:streaming_pass@streaming-postgres:5432/streaming_db
+      - PGHOST=streaming-postgres
+      - PGPORT=5432
+      - PGUSER=streaming_user
+      - PGPASSWORD=streaming_pass
+      - PGDATABASE=streaming_db
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - streaming-network
 
   postgres:
     image: postgres:15
     container_name: streaming-postgres
     restart: unless-stopped
-    network_mode: bridge
     environment:
       - POSTGRES_DB=streaming_db
       - POSTGRES_USER=streaming_user
@@ -34,12 +40,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "0.0.0.0:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U streaming_user -d streaming_db"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - streaming-network
 
 volumes:
   postgres_data:
+
+networks:
+  streaming-network:
+    driver: bridge
