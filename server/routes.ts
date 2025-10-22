@@ -90,6 +90,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // START AND STOP ENDPOINTS - ADD THESE HERE
+  app.post("/api/streams/:id/start", async (req, res) => {
+    try {
+      const streamId = parseInt(req.params.id);
+      const stream = await storage.getStream(streamId);
+      
+      if (!stream) {
+        return res.status(404).json({ error: "Stream not found" });
+      }
+
+      // Set stream as active
+      const updatedStream = await storage.setStreamActive(streamId, true);
+      
+      res.json({ 
+        success: true, 
+        message: "Stream started",
+        stream: updatedStream
+      });
+    } catch (error) {
+      console.error("Error starting stream:", error);
+      res.status(500).json({ error: "Failed to start stream" });
+    }
+  });
+
+  app.post("/api/streams/:id/stop", async (req, res) => {
+    try {
+      const streamId = parseInt(req.params.id);
+      const stream = await storage.getStream(streamId);
+      
+      if (!stream) {
+        return res.status(404).json({ error: "Stream not found" });
+      }
+
+      // Set stream as inactive
+      const updatedStream = await storage.setStreamActive(streamId, false);
+      
+      res.json({ 
+        success: true, 
+        message: "Stream stopped",
+        stream: updatedStream
+      });
+    } catch (error) {
+      console.error("Error stopping stream:", error);
+      res.status(500).json({ error: "Failed to stop stream" });
+    }
+  });
+  // END OF START/STOP ENDPOINTS
+
   app.get("/api/streams/:streamKey/thumbnail", (req, res) => {
     const thumbnailPath = getThumbnailPath(req.params.streamKey);
     if (fs.existsSync(thumbnailPath)) {
